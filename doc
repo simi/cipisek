@@ -1,0 +1,89 @@
+  Get user attributes. You can get only attributes for your account, not for managed accounts. Managed accounts
+  information is available in the foreignAccounts list in result of this method.
+
+    struct client.get(struct user)
+
+  Params:
+      struct user {
+          string session      Session (as retrieved from `client.login()`)
+      }
+
+  Response:
+      struct {
+          string status               Status code
+          string statusMessage        Status code description
+          string session              Refreshed session
+          datetime sessionStarted     When this session was started (by calling `client.login()`)
+          struct user {
+              int userId              User Id
+              string username         Username
+              string agencyStatus     Status of this account
+                                          normal: normal account (not an agency account)
+                                          wallet-agency: agency account taking credit from wallet
+                                          bill-agency: agency account with billing
+                                          client-agency: account expenses are paid by an agency account
+              int walletCredit        User's credit (in halers)
+              int walletCreditWithVat User's credit including VAT; in halers
+              bool walletVerified     User's Wallet is verified
+              int dayBudgetSum        Sum of day budgets of all campaigns (in cents)
+              int accountLimit        Account monthly limit (in halers) or nil;
+                                      account limit is valid only for agency
+                                      client accounts
+          }
+          array foreignAccounts (     Accounts to which this user has access
+              struct {
+                  int userId              Foreign account user id
+                  string username         Foreign account username
+                  string access           Access type
+                                              r: Read-only
+                                              rw: Read-write
+                  string relationName     Name of relation to this foreign account
+                                          (visible only on the page with managed
+                                          account overview)
+                  string relationStatus   Relation status
+                                              live: connection to the account is working
+                                              offer: an offer of the access by a foreign account was not yet accepted
+                                              request: requested access to this foreign account was not yet accepted
+                  string relationType     Type of the relation to this foreign account
+                                              normal: normal
+                                              agency: agency relation; foreign account expenses are paid by this user
+                  int walletCredit        Foreign account user's credit (in halers) or nil
+                                          if not permitted to get this value or no wallet is
+                                          assigned to this account
+                  int walletCreditWithVat Foreign account user's credit including VAT (in halers)
+                                          or nil if not permitted to get this value or no
+                                          wallet is assigned to this account
+                  bool walletVerified     User's Wallet is verified; can be nil if not
+                                          permitted to get this value
+                  int accountLimit        Account monthly limit (in halers) or nil;
+                                          account limit is valid only for agency
+                                          client accounts
+                  int dayBudgetSum        Sum of day budgets of all campaigns (in cents)
+              }
+          )
+          array diagnostics (         (optional) Various diagnostics(warnings, errors, other informations)
+              struct diagnostics {
+                  ...
+              }
+          )
+      }
+  
+
+Response status codes:
+
+  200: OK
+  206: Partially OK
+  301: User is serviced
+  400: Bad arguments
+  401: Invalid session
+  403: Access Denied
+  404: Not found
+  406: Bad values of attributes
+  413: Too many items requested.
+  415: Too many requests. Has to wait.
+  500: Server Error.
+
+
+Diagnostics:
+
+  user_access_denied
